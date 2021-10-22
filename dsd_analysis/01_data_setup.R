@@ -43,6 +43,8 @@ ggplot(dhaka_zones, aes(fill=urban)) + geom_sf() + theme_minimal() + scale_fill_
 ggplot(dhaka_zones, aes(fill=rural)) + geom_sf() + theme_minimal() + scale_fill_gradient(low = 'white', high = 'forestgreen')
 ggplot(dhaka_zones, aes(fill=water)) + geom_sf() + theme_minimal() + scale_fill_gradient(low = 'white', high = 'navy')
 
+write_sf(dhaka_zones, "dsd_data/shps/dhaka_zones_data.shp")
+
 #'--------------------------------------------------------------------------------------------
 #' import and setup low income areas
 
