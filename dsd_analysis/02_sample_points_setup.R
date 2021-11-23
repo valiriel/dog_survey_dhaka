@@ -1,6 +1,6 @@
 #remotes::install_github("r-spatial/mapview")
-library(sf); library(tidyverse); library(mapview); mapviewOptions(fgb = FALSE); library(leafem)
-mapviewOptions(vector.palette = viridisLite::viridis, alpha=1, legend=F, basemaps = c("OpenStreetMap"), legend.opacity = 0)
+library(sf); library(tidyverse); library(mapview); mapviewOptions(fgb = FALSE); library(leafem); library(leaflet)
+mapviewOptions(vector.palette = viridisLite::viridis, alpha=1, legend=F, legend.opacity = 0)
 rename_geometry <- function(g, name){
   current = attr(g, "sf_column")
   names(g)[names(g)==current] = name
@@ -27,12 +27,12 @@ n.p.w <- round((4*(z^2)*p*(1-p))/(w^2))
 
 sample <- ceiling(n.p.w + (n.p.w/100)*80)
 
-# 900 points, 4 hhs per point, 15 groups, 5 days is the final
+# 840 points, 4 hhs per point, 8 points per group, 15 groups, 7 days is the final
 
 dhaka_building <- read_sf("dsd_data/shps/simplified_dhaka_large_buildings.shp")
 dhaka_building$ID <- 1; dhaka_building <- summarise(group_by(dhaka_building,ID))
 
-survey_points <- st_sample(dhaka_building, size=900) %>% st_transform(crs=4326) %>% st_as_sf()
+survey_points <- st_sample(dhaka_building, size=840) %>% st_transform(crs=4326) %>% st_as_sf()
 survey_points <- rename_geometry(survey_points, "geometry")
 mapview(survey_points)
 
@@ -52,7 +52,7 @@ while (b == TRUE) {
 }
 
 survey_points$main_cluster <- clusters$cluster; mapview(survey_points, zcol="main_cluster")
-# save(survey_points, file="dsd_data/points_main_cluster.rda")
+save(survey_points, file="dsd_data/points_main_cluster.rda")
 load("dsd_data/points_main_cluster.rda")
 
 #'------------------------------------------------------------------------------------------------------
@@ -63,12 +63,12 @@ for (k in 1:15) {
   sub_clusters <- st_transform(survey_points, crs=4326) %>% filter(main_cluster == k)
   
   A <- data.frame(st_coordinates(sub_clusters))
-  mean <- nrow(A)/5
+  mean <- nrow(A)/7
   
   b <- T;i<-1
   while (b == TRUE) {
     
-    clusters <- kmeans(A, centers = 5, nstart=1, iter.max = 1) # 5 days, 60 points/5 = 12 per day approx.
+    clusters <- kmeans(A, centers = 7, nstart=1, iter.max = 1) # 7 days, = 8 per day approx.
     #plot(A, col = clusters$cluster)  
     i<-i+1; print(paste0(k, "___", i))
     if(sum(clusters$size<floor(mean-2)) == 0 & sum(clusters$size>ceiling(mean+2)) == 0)
@@ -87,9 +87,13 @@ for (k in 1:15) {
   sub_clusters$link <- paste0("https://www.google.com/maps/search/?api=1&query=", 
                               str_sub(sub_clusters$y,1,11), ",", str_sub(sub_clusters$x,1,11))
   
-  m <- mapview(sub_clusters, zcol="clusters", cex=9, label=sub_clusters$G_ID) #%>% 
-        #addStaticLabels(label=sub_clusters$G_ID, noHide = TRUE, textOnly = TRUE, 
-                        #textsize = "15px", permanent=TRUE, offset=c(20,0))
+  m <- mapview(sub_clusters, zcol="clusters", cex=7, label=sub_clusters$G_ID) %>% 
+        addStaticLabels(label=sub_clusters$G_ID, noHide = TRUE, textOnly = TRUE, direction="right",
+                        textsize = "14px", permanent=TRUE, offset=c(10,0)) %>%
+    setMaxBounds(lng1=as.numeric(st_bbox(sub_clusters))[1],
+              lat1=as.numeric(st_bbox(sub_clusters))[2],
+              lng2=as.numeric(st_bbox(sub_clusters))[3],
+              lat2=as.numeric(st_bbox(sub_clusters))[4])
   
   dir.create(paste0("dsd_output/groups_samples/group_",k))
   mapshot(m, file=paste0("dsd_output/groups_samples/group_",k,"/group_",k,".pdf"))
