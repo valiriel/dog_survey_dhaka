@@ -34,6 +34,7 @@ dhaka_zones <- left_join(dhaka_zones, dog_data, by="zone")
 
 dhaka_zones$dog_dens_km_area <- dhaka_zones$dog_pop/dhaka_zones$area_km
 dhaka_zones$dog_dens_km_road <- dhaka_zones$dog_pop/dhaka_zones$roads_lenght
+dhaka_zones$ID <- rownames(dhaka_zones)
 
 ggplot(dhaka_zones, aes(fill=dog_dens_km_area)) + geom_sf() + theme_minimal() + scale_fill_viridis_c()
 ggplot(dhaka_zones, aes(fill=dog_pop)) + geom_sf() + theme_minimal() + scale_fill_viridis_c()
@@ -43,7 +44,7 @@ ggplot(dhaka_zones, aes(fill=urban)) + geom_sf() + theme_minimal() + scale_fill_
 ggplot(dhaka_zones, aes(fill=rural)) + geom_sf() + theme_minimal() + scale_fill_gradient(low = 'white', high = 'forestgreen')
 ggplot(dhaka_zones, aes(fill=water)) + geom_sf() + theme_minimal() + scale_fill_gradient(low = 'white', high = 'navy')
 
-write_sf(dhaka_zones, "dsd_data/shps/dhaka_zones_data.shp")
+b <- as_Spatial(dhaka_zones); rgdal::writeOGR(b, dsn="dsd_data/shps", layer="dhaka_zones", driver="ESRI Shapefile", overwrite_layer=TRUE)
 
 #'--------------------------------------------------------------------------------------------
 #' import and setup low income areas

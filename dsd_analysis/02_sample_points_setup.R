@@ -115,3 +115,11 @@ save(data, file="dsd_output/clustered_points_final.rda")
 load("dsd_output/clustered_points_final.rda")
 
 mapview(data, zcol="group") + mapview(data, zcol="clusters")
+
+# get distance to closest point
+distance_data <- matrix(as.numeric(st_distance(data)), dim(data)[1], dim(data)[1]) # pairwise distance between each point
+distance_data[distance_data == 0] <- 100000 # remove diagonal
+closest_point_distance <- apply(distance_data, 2, min)
+
+summary(closest_point_distance)
+sd(closest_point_distance)
